@@ -83,15 +83,13 @@ PolygonGroup.prototype.load = function(archive) {
   }
 
   this.parseMeshData();
-
-  // BuildBuffers();
 };
 
 /**
  * @private
  */
 PolygonGroup.prototype.parseMeshData = function() {
-  this.vertices = [];
+  this.vertexArray = [];
 
   while (!this.meshData.isEof()) {
     let vertex = {};
@@ -110,13 +108,6 @@ PolygonGroup.prototype.parseMeshData = function() {
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.COLOR) {
-      var offset = this.meshData.getOffset();
-      vertex.colorBuffer = [
-        this.meshData.readUInt16(),
-        this.meshData.readUInt16()
-      ];
-      this.meshData.setOffset(offset);
-
       vertex.color = [
         this.meshData.readUInt8(),
         this.meshData.readUInt8(),
@@ -218,7 +209,7 @@ PolygonGroup.prototype.parseMeshData = function() {
       ];
     }
 
-    this.vertices.push(vertex);
+    this.vertexArray.push(vertex);
   }
 
 

@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+var args = process.argv;
+if (args.length != 3) {
+  console.log('Usage: sc2reader <input file>');
+  process.exit(1);
+}
+
+var input = args[2];
+var sc2reader = require('../index.js');
+
+try {
+  let scene = sc2reader.read(input);
+  console.log(JSON.stringify(scene, null, 2));
+} catch (err) {
+  console.log(err);
+}

@@ -12,6 +12,8 @@ const LOAD_MAP = {
   'RenderComponent': 'components/render-component',
   'CustomPropertiesComponent': 'components/custom-properties-component',
   'LodComponent': 'components/lod-component',
+  'ParticleEffectComponent': 'components/particle-effect-component',
+  'UserComponent': 'components/user-component',
 
   // render objects
   'RenderObject': 'render-objects/render-object',
@@ -21,7 +23,7 @@ const LOAD_MAP = {
 
 let loaded = {};
 module.exports.get = function(name) {
-  if (!LOAD_MAP[name]) throw new Error('Unknown class: ' + name);
+  if (!LOAD_MAP[name]) return (function() {});
   if (!loaded[name]) {
     loaded[name] = require('./' + LOAD_MAP[name]);
   }

@@ -47,7 +47,14 @@ RenderObject.prototype.load = function(archive) {
     batchArch = batchesArch[leftPad(i, 4, '0')];
     if (batchArch) {
       let BatchClassName = Objects.get(batchArch['rb.classname']);
-      this.batches.push(new BatchClassName(batchArch));
+      let batch = new BatchClassName(batchArch);
+      if (archive['rb' + i +'.lodIndex'] !== undefined) {
+        batch.lodIndex = archive['rb' + i +'.lodIndex'];
+      }
+      if (archive['rb' + i +'.switchIndex'] !== undefined) {
+        batch.switchIndex = archive['rb' + i +'.switchIndex'];
+      }
+      this.batches.push(batch);
     }
   }
 };
