@@ -1,5 +1,4 @@
-var fs = require('fs'),
-    int64buffer = require('int64-buffer'),
+var int64buffer = require('int64-buffer'),
     bigInteger = require('big-integer'),
     VariantType = require('./variant-type'),
     KeyedArchive = require('./keyed-archive');

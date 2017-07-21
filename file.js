@@ -3,6 +3,8 @@ var fs = require('fs'),
 
     ByteArray = require('./byte-array');
 
+fs.readFileAsync = util.promisify(fs.readFile);
+
 /**
  * Wrapper for binary file reading
  *
@@ -11,7 +13,6 @@ var fs = require('fs'),
 function File(path) {
   this.offset = 0;
   this.path = path;
-  this.load();
 }
 util.inherits(File, ByteArray);
 
@@ -23,6 +24,19 @@ util.inherits(File, ByteArray);
 File.prototype.load = function() {
   try {
     this.buf = fs.readFileSync(this.path);
+  } catch (err) {
+   throw new Error('Failed to read the file: ' + err.message);
+  }
+};
+
+/**
+ * Async version of load()
+ *
+ * @private
+ */
+File.prototype.loadAsync = async function() {
+  try {
+    this.buf = await fs.readFileAsync(this.path);
   } catch (err) {
    throw new Error('Failed to read the file: ' + err.message);
   }

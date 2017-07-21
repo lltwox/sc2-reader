@@ -12,9 +12,33 @@ var path = require('path'),
  */
 module.exports.read = function(scenePath) {
   let file = new File(scenePath);
-  let scene = {};
+  file.load();
 
-  scene.name = path.basename(scenePath);
+  return parseScene(file);
+};
+
+/**
+ * Async version of read()
+ *
+ * @param {String} scenePath
+ * @return {Object}
+ */
+module.exports.readAsync = async function(scenePath) {
+  let file = new File(scenePath);
+  await file.loadAsync();
+
+  return parseScene(file);
+};
+
+/**
+ * Parse scene file
+ *
+ * @param {File} file
+ * @return {Object}
+ */
+function parseScene(file) {
+  let scene = {};
+  scene.name = path.basename(file.path);
   scene.header = readHeader(file, scene);
   scene.versionTags = readVersionTags(file, scene);
   scene.descriptor = readDescriptor(file, scene);
@@ -25,7 +49,7 @@ module.exports.read = function(scenePath) {
   debug('Bytes read:', file.offset, 'Total bytes:', file.buf.length);
 
   return scene;
-};
+}
 
 /**
  * Read header tag
