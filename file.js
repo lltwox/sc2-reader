@@ -38,7 +38,9 @@ File.prototype.loadAsync = async function() {
   try {
     this.buf = await fs.readFileAsync(this.path);
   } catch (err) {
-   throw new Error('Failed to read the file: ' + err.message);
+    let newErr = new Error('Failed to read the file: ' + err.message);
+    if (err.code) newErr.code = err.code;
+    throw newErr;
   }
 };
 
