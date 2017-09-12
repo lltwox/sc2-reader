@@ -12,22 +12,24 @@ Entity.prototype.load = function(archive) {
   this.id = archive.id || 0;
   this.flags = archive.flags;
 
-  let byteArray = archive.localTransform.getValue();
-  this.localTransform = [
-    [byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat()],
-    [byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat()],
-    [byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat()],
-    [byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat()]
-  ];
+  if (archive.localTransform) {
+    let byteArray = archive.localTransform.getValue();
+    this.localTransform = [
+      [byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat()],
+      [byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat()],
+      [byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat()],
+      [byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat(), byteArray.readFloat()]
+    ];
+  }
 
   if (archive.components && Object.keys(archive.components).length) {
     this.components = [];
 
     let count = archive.components.count;
     for (let i = 0; i < count; i++) {
-      componentArch = archive.components[leftPad(i, 4, '0')];
+      let componentArch = archive.components[leftPad(i, 4, '0')];
       if (componentArch) {
-        type = componentArch['comp.typename'];
+        let type = componentArch['comp.typename'];
         let Component = Objects.get(type);
         this.components.push(new Component(componentArch));
       }
