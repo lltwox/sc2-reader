@@ -44,7 +44,7 @@ RenderObject.prototype.load = function(archive) {
   let batchesArch = archive['ro.batches'];
   this.batches = [];
   for (let i = 0; i < roBatchCount; i++) {
-    batchArch = batchesArch[leftPad(i, 4, '0')];
+    let batchArch = batchesArch[leftPad(i, 4, '0')];
     if (batchArch) {
       let BatchClassName = Objects.get(batchArch['rb.classname']);
       let batch = new BatchClassName(batchArch);

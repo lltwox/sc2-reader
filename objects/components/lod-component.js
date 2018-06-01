@@ -8,7 +8,7 @@ LodComponent.prototype.load = function(archive) {
   let lodDistArch = archive['lc.loddist'];
   if (lodDistArch) {
     this.distances = [];
-    for (let i = 0; i < 4 /* MAX_LOD_LAYERS */; i++) {
+    for (let i = 0; i < 4/* MAX_LOD_LAYERS */; i++) {
       this.distances[i] = lodDistArch['distance' + i];
     }
   }

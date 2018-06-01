@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+
+let args = process.argv;
+if (args.length != 3) {
+  console.log('Usage: ka <input file>');
+  process.exit(1);
+}
+
+let input = args[2];
+
+let File = require('../file'),
+    KeyedArchive = require('../keyed-archive');
+
+try {
+  let file = new File(input);
+  file.load();
+
+  let archive = new KeyedArchive(file);
+  console.log(JSON.stringify(archive.get(), null, 2));
+} catch (err) {
+  console.log(err);
+}
