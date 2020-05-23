@@ -30,7 +30,8 @@ VariantType.TYPES = [
   'TYPE_UINT8',
   'TYPE_INT16',
   'TYPE_UINT16',
-  'TYPES_COUNT' // every new type should be always added to the end for compatibility with old archives
+  'TYPE_??????',
+  'TYPE_ARRAY'
 ];
 
 VariantType.SIMPLE_TYPES = [
@@ -55,7 +56,8 @@ VariantType.SIMPLE_TYPES = [
   'TYPE_INT8',
   'TYPE_UINT8',
   'TYPE_INT16',
-  'TYPE_UINT16'
+  'TYPE_UINT16',
+  'TYPE_ARRAY'
 ];
 
 VariantType.prototype.read = function(file) {
@@ -144,6 +146,14 @@ VariantType.prototype.read = function(file) {
   } else if (typeName == 'TYPE_FILEPATH') {
     let length = file.readInt32();
     this.value = file.readString(length);
+  } else if (typeName == 'TYPE_ARRAY') {
+    let length = file.readInt32();
+    this.value = [];
+    for (let i = 0; i < length; i++) {
+      this.value.push(file.readVariantType(this.indent + 1).getOnlySimpleValue());
+    }
+  } else {
+    throw new Error('Unsuppored type:' + typeName);
   }
 
   this.type = typeName;
@@ -159,6 +169,22 @@ VariantType.prototype.getType = function() {
 
 VariantType.prototype.getValue = function() {
   return this.value;
+};
+
+VariantType.prototype.toString = function() {
+  if (this.type == 'TYPE_KEYED_ARCHIVE') {
+    return this.value;
+  }
+
+  if (VariantType.SIMPLE_TYPES.includes(this.type)) {
+    return this.value.toString();
+  }
+
+  if (this.type == 'TYPE_BYTE_ARRAY') {
+    return this.value.buf.toString('hex');
+  }
+
+  return this;
 };
 
 VariantType.prototype.getOnlySimpleValue = function() {

@@ -38,13 +38,19 @@ KeyedArchive.prototype.read = function(file) {
 
   } else {
     debug('no header');
-    file.resetOffset();
 
-    while (!file.isEof()) {
-      let key = file.readVariantType(),
-          value = file.readVariantType();
+    let offset = file.getOffset();
+    try {
+      file.resetOffset();
+      while (!file.isEof()) {
+        let key = file.readVariantType();
+        let value = file.readVariantType();
 
-      this.map[key.getValue()] = value.getOnlySimpleValue();
+        this.map[key.getValue()] = value.getOnlySimpleValue();
+      }
+    } catch (err) {
+      file.setOffset(offset);
+      throw err;
     }
   }
 };

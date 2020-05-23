@@ -44,4 +44,9 @@ File.prototype.loadAsync = async function() {
   }
 };
 
+File.prototype.debug = function() {
+  console.log(`File <${this.path}>`);
+  ByteArray.prototype.debug.call(this);
+};
+
 module.exports = File;

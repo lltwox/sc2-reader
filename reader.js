@@ -14,7 +14,12 @@ module.exports.read = function(scenePath) {
   let file = new File(scenePath);
   file.load();
 
-  return parseScene(file);
+  try {
+    return parseScene(file);
+  } catch (err) {
+    file.debug();
+    throw err;
+  }
 };
 
 /**
@@ -40,13 +45,33 @@ function parseScene(file) {
   let scene = {};
   scene.name = path.basename(file.path);
   scene.header = readHeader(file, scene);
-  scene.versionTags = readVersionTags(file, scene);
-  scene.descriptor = readDescriptor(file, scene);
-  scene.nodes = readNodes(file, scene);
-  scene.globalMaterial = readGlobalMaterial(file, scene);
-  scene.entities = readEntities(file, scene);
+  if (scene.header.signature == 'SCPG') {
+    scene.nodes = readNodes(file, scene);
+  } else {
+    scene.versionTags = readVersionTags(file, scene);
+    scene.descriptor = readDescriptor(file, scene);
+    scene.nodes = readNodes(file, scene);
 
-  debug('Bytes read:', file.offset, 'Total bytes:', file.buf.length);
+    if (scene.header.version == 25) {
+      scene.globalMaterial = readGlobalMaterial(file, scene);
+    }
+    if (scene.header.version == 26) {
+      scene.unknown = file.readByteArray(8);
+      try {
+        let polygonScene = module.exports.read(
+          file.path.replace(/\.sc2$/, '.scg')
+        );
+        scene.nodes = scene.nodes.concat(polygonScene.nodes);
+        scene.nodes.sort((a, b) => a.id - b.id);
+      } catch (err) {
+        throw new Error('Failed to read polygon scene: ' + err.message);
+      }
+    }
+
+    scene.entities = readEntities(file, scene);
+
+    debug('Bytes read:', file.offset, 'Total bytes:', file.buf.length);
+  }
 
   return scene;
 }
@@ -58,11 +83,13 @@ function parseScene(file) {
  * @return {Object}
  */
 function readHeader(file) {
-  if (file.readString(4) != 'SFV2') { // signature
+  let signature = file.readString(4);
+  if (signature != 'SFV2' && signature != 'SCPG') { // signature
     throw new Error('Invalid header file in ' + file.path);
   }
 
   return {
+    signature: signature,
     version: file.readInt32(),
     nodeCount: file.readInt32()
   };
@@ -142,7 +169,6 @@ function readGlobalMaterial(file, scene) {
   if (scene.header.nodeCount <= 0) return;
 
   let offset = file.getOffset();
-
   let archive = file.readKeyedArchive().get();
   if (archive['##name'] != 'GlobalMaterial') {
     file.setOffset(offset);

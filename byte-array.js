@@ -181,4 +181,59 @@ ByteArray.prototype.readKeyedArchive = function(byteArray) {
   }
 };
 
+ByteArray.prototype.debug = function() {
+  let currentLine = Math.floor(this.offset / BYTES_IN_LINE);
+  for (let i = DEBUG_LINES; i >= 0; i--) {
+    this.printLine(currentLine - i);
+  }
+  this.printCurrentBytePointer();
+  for (let i = 1; i <= DEBUG_LINES; i++) {
+    this.printLine(currentLine + i);
+  }
+};
+
+ByteArray.prototype.printLine = function(n) {
+  if (n < 0) return;
+  let line = '';
+
+  let offset = n * BYTES_IN_LINE;
+  if (offset >= this.buf.length) return;
+
+  line += offset.toString(16).padStart(8, 0) + ':  ';
+
+  for (let i = 0; i < BYTES_IN_LINE; i++) {
+    if (offset + i < this.buf.length) {
+      let value = this.buf.readUInt8(offset + i);
+      line += value.toString(16).padStart(2, 0);
+    } else {
+      line += '  ';
+    }
+
+    if (i % 2) line += ' ';
+  }
+
+  line += ' :';
+
+  for (let i = 0; i < BYTES_IN_LINE; i++) {
+    if (offset + i < this.buf.length) {
+      let value = this.buf.readUInt8(offset + i);
+      let char = '.';
+      if (value >= 33 && value < 127) char = String.fromCharCode(value);
+      line += char;
+    } else {
+      line += ' ';
+    }
+  }
+
+  console.log(line);
+};
+
+ByteArray.prototype.printCurrentBytePointer = function() {
+  let byteN = this.offset % BYTES_IN_LINE;
+  console.log(''.padStart(8 + 3 + byteN * 2 + Math.floor(byteN / 2)) + '^^');
+};
+
+const BYTES_IN_LINE = 24;
+const DEBUG_LINES = 3;
+
 module.exports = ByteArray;
