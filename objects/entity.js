@@ -1,5 +1,4 @@
-var leftPad = require('left-pad'),
-    Objects = require('./index.js');
+var Objects = require('./index.js');
 
 function Entity(archive) {
   this.className = this.constructor.name;
@@ -27,7 +26,7 @@ Entity.prototype.load = function(archive) {
 
     let count = archive.components.count;
     for (let i = 0; i < count; i++) {
-      let componentArch = archive.components[leftPad(i, 4, '0')];
+      let componentArch = archive.components[String(i).padStart(4, '0')];
       if (componentArch) {
         let type = componentArch['comp.typename'];
         let Component = Objects.get(type);

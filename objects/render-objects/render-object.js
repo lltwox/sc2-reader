@@ -1,5 +1,4 @@
-var leftPad = require('left-pad'),
-    Objects = require('../index');
+var Objects = require('../index');
 
 function RenderObject(archive) {
   this.className = this.constructor.name;
@@ -44,7 +43,7 @@ RenderObject.prototype.load = function(archive) {
   let batchesArch = archive['ro.batches'];
   this.batches = [];
   for (let i = 0; i < roBatchCount; i++) {
-    let batchArch = batchesArch[leftPad(i, 4, '0')];
+    let batchArch = batchesArch[String(i).padStart(4, '0')];
     if (batchArch) {
       let BatchClassName = Objects.get(batchArch['rb.classname']);
       let batch = new BatchClassName(batchArch);
