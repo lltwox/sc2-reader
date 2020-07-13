@@ -16,7 +16,7 @@ PolygonGroup.EVF = {
   TEXCOORD3: 1 << 6,
   TANGENT: 1 << 7,
   BINORMAL: 1 << 8,
-  // nineth bit skipped cause legacy, for now it unused
+  LEGACY: 1 << 9, // ninth bit was legacy, now it means something
   TIME: 1 << 10,
   PIVOT: 1 << 11,
   FLEXIBILITY: 1 << 12,
@@ -157,6 +157,9 @@ PolygonGroup.prototype.parseMeshData = function() {
         this.meshData.readFloat()
       ];
     }
+    if (this.vertexFormat & PolygonGroup.EVF.LEGACY) {
+      vertex.legacy = this.meshData.readFloat();
+    }
     if (this.vertexFormat & PolygonGroup.EVF.JOINTINDEX) {
       vertex.jointIdx = this.meshData.readFloat();
     }
@@ -236,6 +239,7 @@ PolygonGroup.prototype.getVertexSize = function(flags) {
   if (flags & PolygonGroup.EVF.CUBETEXCOORD2) size += 3 * 4;
   if (flags & PolygonGroup.EVF.CUBETEXCOORD3) size += 3 * 4;
 
+  if (flags & PolygonGroup.EVF.LEGACY) size += 4;
   if (flags & PolygonGroup.EVF.TIME) size += 4;
 
   if (flags & PolygonGroup.EVF.PIVOT) size += 3 * 4;

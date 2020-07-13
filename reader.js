@@ -45,6 +45,7 @@ function parseScene(file) {
   let scene = {};
   scene.name = path.basename(file.path);
   scene.header = readHeader(file, scene);
+
   if (scene.header.signature == 'SCPG') {
     scene.nodes = readNodes(file, scene);
   } else {
@@ -55,17 +56,13 @@ function parseScene(file) {
     if (scene.header.version == 25) {
       scene.globalMaterial = readGlobalMaterial(file, scene);
     }
-    if (scene.header.version == 26) {
+    if (scene.header.version == 26 || scene.header.version == 27) {
       scene.unknown = file.readByteArray(8);
-      try {
-        let polygonScene = module.exports.read(
-          file.path.replace(/\.sc2$/, '.scg')
-        );
-        scene.nodes = scene.nodes.concat(polygonScene.nodes);
-        scene.nodes.sort((a, b) => a.id - b.id);
-      } catch (err) {
-        throw new Error('Failed to read polygon scene: ' + err.message);
-      }
+      let polygonScene = module.exports.read(
+        file.path.replace(/\.sc2$/, '.scg')
+      );
+      scene.nodes = scene.nodes.concat(polygonScene.nodes);
+      scene.nodes.sort((a, b) => a.id - b.id);
     }
 
     scene.entities = readEntities(file, scene);
