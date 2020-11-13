@@ -16,9 +16,9 @@ PolygonGroup.EVF = {
   TEXCOORD3: 1 << 6,
   TANGENT: 1 << 7,
   BINORMAL: 1 << 8,
-  LEGACY: 1 << 9, // ninth bit was legacy, now it means something
-  TIME: 1 << 10,
-  PIVOT: 1 << 11,
+  HARD_JOINTINDEX: 1 << 9, // ninth bit was legacy, now it means something
+  PIVOT4: 1 << 10,
+  PIVOT_DEPRECATED: 1 << 11,
   FLEXIBILITY: 1 << 12,
   ANGLE_SIN_COS: 1 << 13,
   JOINTINDEX: 1 << 14,
@@ -157,14 +157,48 @@ PolygonGroup.prototype.parseMeshData = function() {
         this.meshData.readFloat()
       ];
     }
-    if (this.vertexFormat & PolygonGroup.EVF.LEGACY) {
-      vertex.legacy = this.meshData.readFloat();
+    if (this.vertexFormat & PolygonGroup.EVF.HARD_JOINTINDEX) {
+      vertex.hardJointIndex = this.meshData.readFloat();
+    }
+    if (this.vertexFormat & PolygonGroup.EVF.PIVOT4) {
+      vertex.pivot4 = [
+        this.meshData.readFloat(),
+        this.meshData.readFloat(),
+        this.meshData.readFloat(),
+        this.meshData.readFloat()
+      ];
+    }
+    if (this.vertexFormat & PolygonGroup.EVF.PIVOT_DEPRECATED) {
+      vertex.pivotDeprecated = [
+        this.meshData.readFloat(),
+        this.meshData.readFloat(),
+        this.meshData.readFloat()
+      ];
+    }
+    if (this.vertexFormat & PolygonGroup.EVF.FLEXIBILITY) {
+      vertex.flex = this.meshData.readFloat();
+    }
+    if (this.vertexFormat & PolygonGroup.EVF.ANGLE_SIN_COS) {
+      vertex.angle = [
+        this.meshData.readFloat(),
+        this.meshData.readFloat()
+      ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.JOINTINDEX) {
-      vertex.jointIdx = this.meshData.readFloat();
+      vertex.jointIdx = [
+        this.meshData.readFloat(),
+        this.meshData.readFloat(),
+        this.meshData.readFloat(),
+        this.meshData.readFloat()
+      ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.JOINTWEIGHT) {
-      vertex.jointWeight = this.meshData.readFloat();
+      vertex.jointWeight = [
+        this.meshData.readFloat(),
+        this.meshData.readFloat(),
+        this.meshData.readFloat(),
+        this.meshData.readFloat()
+      ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.CUBETEXCOORD0) {
       vertex.cubeTextureCoord = vertex.cubeTextureCoord || [];
@@ -195,22 +229,6 @@ PolygonGroup.prototype.parseMeshData = function() {
         this.meshData.readFloat()
       ];
     }
-    if (this.vertexFormat & PolygonGroup.EVF.PIVOT) {
-      vertex.pivot = [
-        this.meshData.readFloat(),
-        this.meshData.readFloat(),
-        this.meshData.readFloat()
-      ];
-    }
-    if (this.vertexFormat & PolygonGroup.EVF.FLEXIBILITY) {
-      vertex.flex = this.meshData.readFloat();
-    }
-    if (this.vertexFormat & PolygonGroup.EVF.ANGLE_SIN_COS) {
-      vertex.angle = [
-        this.meshData.readFloat(),
-        this.meshData.readFloat()
-      ];
-    }
 
     this.vertexArray.push(vertex);
   }
@@ -231,23 +249,24 @@ PolygonGroup.prototype.getVertexSize = function(flags) {
   if (flags & PolygonGroup.EVF.TEXCOORD1) size += 2 * 4;
   if (flags & PolygonGroup.EVF.TEXCOORD2) size += 2 * 4;
   if (flags & PolygonGroup.EVF.TEXCOORD3) size += 2 * 4;
+
   if (flags & PolygonGroup.EVF.TANGENT) size += 3 * 4;
   if (flags & PolygonGroup.EVF.BINORMAL) size += 3 * 4;
+  if (flags & PolygonGroup.EVF.HARD_JOINTINDEX) size += 4;
 
   if (flags & PolygonGroup.EVF.CUBETEXCOORD0) size += 3 * 4;
   if (flags & PolygonGroup.EVF.CUBETEXCOORD1) size += 3 * 4;
   if (flags & PolygonGroup.EVF.CUBETEXCOORD2) size += 3 * 4;
   if (flags & PolygonGroup.EVF.CUBETEXCOORD3) size += 3 * 4;
 
-  if (flags & PolygonGroup.EVF.LEGACY) size += 4;
-  if (flags & PolygonGroup.EVF.TIME) size += 4;
+  if (flags & PolygonGroup.EVF.PIVOT4) size += 4 * 4;
+  if (flags & PolygonGroup.EVF.PIVOT_DEPRECATED) size += 3 * 4;
 
-  if (flags & PolygonGroup.EVF.PIVOT) size += 3 * 4;
   if (flags & PolygonGroup.EVF.FLEXIBILITY) size += 4;
   if (flags & PolygonGroup.EVF.ANGLE_SIN_COS) size += 2 * 4;
 
-  if (flags & PolygonGroup.EVF.JOINTINDEX) size += 1 * 4;
-  if (flags & PolygonGroup.EVF.JOINTWEIGHT) size += 1 * 4;
+  if (flags & PolygonGroup.EVF.JOINTINDEX) size += 4 * 4;
+  if (flags & PolygonGroup.EVF.JOINTWEIGHT) size += 4 * 4;
 
   return size;
 };

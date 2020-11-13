@@ -64,6 +64,15 @@ function parseScene(file) {
       scene.nodes = scene.nodes.concat(polygonScene.nodes);
       scene.nodes.sort((a, b) => a.id - b.id);
     }
+    if (scene.header.version == 28) {
+      scene.unknown = file.readByteArray(8);
+      scene.unknownArchive = file.readKeyedArchive().get();
+      let polygonScene = module.exports.read(
+        file.path.replace(/\.sc2$/, '.scg')
+      );
+      scene.nodes = scene.nodes.concat(polygonScene.nodes);
+      scene.nodes.sort((a, b) => a.id - b.id);
+    }
 
     scene.entities = readEntities(file, scene);
 

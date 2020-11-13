@@ -18,7 +18,8 @@ const LOAD_MAP = {
   // render objects
   'RenderObject': 'render-objects/render-object',
   'RenderBatch': 'render-objects/render-batch',
-  'Mesh': 'render-objects/mesh'
+  'Mesh': 'render-objects/mesh',
+  'SkinnedMesh': 'render-objects/skinned-mesh'
 };
 
 let loaded = {};
