@@ -17,7 +17,7 @@ module.exports.read = function(scenePath) {
   try {
     return parseScene(file);
   } catch (err) {
-    file.debug();
+    if (!file.isEof()) file.debug();
     throw err;
   }
 };
@@ -51,20 +51,25 @@ function parseScene(file) {
   } else {
     scene.versionTags = readVersionTags(file, scene);
     scene.descriptor = readDescriptor(file, scene);
-    scene.nodes = readNodes(file, scene);
 
     if (scene.header.version == 25) {
+      scene.nodes = readNodes(file, scene);
       scene.globalMaterial = readGlobalMaterial(file, scene);
-    }
-    if (scene.header.version == 26 || scene.header.version == 27) {
+      scene.entities = readEntities(file, scene);
+    } else if (scene.header.version == 26 || scene.header.version == 27) {
+      scene.nodes = readNodes(file, scene);
+
       scene.unknown = file.readByteArray(8);
       let polygonScene = module.exports.read(
         file.path.replace(/\.sc2$/, '.scg')
       );
       scene.nodes = scene.nodes.concat(polygonScene.nodes);
       scene.nodes.sort((a, b) => a.id - b.id);
-    }
-    if (scene.header.version == 28) {
+
+      scene.entities = readEntities(file, scene);
+    } else if (scene.header.version == 28) {
+      scene.nodes = readNodes(file, scene);
+
       scene.unknown = file.readByteArray(8);
       scene.unknownArchive = file.readKeyedArchive().get();
       let polygonScene = module.exports.read(
@@ -72,9 +77,23 @@ function parseScene(file) {
       );
       scene.nodes = scene.nodes.concat(polygonScene.nodes);
       scene.nodes.sort((a, b) => a.id - b.id);
-    }
 
-    scene.entities = readEntities(file, scene);
+      scene.entities = readEntities(file, scene);
+    } else  if (scene.header.version == 30) {
+      const data = file.readKeyedArchive().get();
+      scene.nodes = data['#dataNodes'].map(archive => {
+        let Node = Objects.get(archive['##name']);
+        return new Node(archive);
+      });
+      scene.entities = parseEntitiesHierarchy(data['#hierarchy']);
+      let polygonScene = module.exports.read(
+        file.path.replace(/\.sc2$/, '.scg')
+      );
+      scene.nodes = scene.nodes.concat(polygonScene.nodes);
+      scene.nodes.sort((a, b) => a.id - b.id);
+    } else {
+      throw new Error('Unsupported scene version:', scene.header.version);
+    }
 
     debug('Bytes read:', file.offset, 'Total bytes:', file.buf.length);
   }
@@ -213,8 +232,8 @@ function readEntities(file, scene) {
 function readEntity(file, scene, parent) {
   let archive = file.readKeyedArchive().get();
   let name = archive['##name'];
-
   if (name != 'Entity') throw new Error('Unsupported hierarchy:', name);
+
   let Entity = Objects.get(archive['##name']);
   let entity = new Entity(archive);
 
@@ -229,4 +248,26 @@ function readEntity(file, scene, parent) {
   }
 
   return entity;
+}
+
+/**
+ * Parse hierarchy of entities of header 30+ file format
+ *
+ * @param {Object} hierarchy
+ * @return {Array}
+ */
+function parseEntitiesHierarchy(hierarchy) {
+  return hierarchy.map(archive => {
+    let name = archive['##name'];
+    if (name != 'Entity') throw new Error('Unsupported hierarchy:', name);
+
+    let Entity = Objects.get(archive['##name']);
+    let entity = new Entity(archive);
+
+    if (archive['#hierarchy']) {
+      entity.children = parseEntitiesHierarchy(archive['#hierarchy']);
+    }
+
+    return entity;
+  });
 }

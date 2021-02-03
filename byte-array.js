@@ -169,8 +169,8 @@ ByteArray.prototype.readByteArray = function(length) {
   return new ByteArray(buf);
 };
 
-ByteArray.prototype.readVariantType = function() {
-  return new VariantType(this);
+ByteArray.prototype.readVariantType = function(version) {
+  return new VariantType(this, version);
 };
 
 ByteArray.prototype.readKeyedArchive = function(byteArray) {
