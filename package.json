@@ -14,8 +14,11 @@
   "license": "UNLICENSED",
   "dependencies": {
     "big-integer": "^1.6.48",
-    "debug": "^4.1.1",
-    "int64-buffer": "^0.1.10",
-    "lodash": "^4.17.19"
+    "debug": "^4.3.1",
+    "int64-buffer": "^1.0.1",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^8.3.0"
   }
 }

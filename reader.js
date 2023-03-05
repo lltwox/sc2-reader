@@ -1,8 +1,7 @@
 var path = require('path'),
-    debug = require('debug')('sc2'),
-
-    File = require('./file'),
-    Objects = require('./objects');
+  debug = require('debug')('sc2'),
+  File = require('./file'),
+  Objects = require('./objects');
 
 /**
  * Read given .sc2 file and return json representation of all it's data
@@ -10,7 +9,7 @@ var path = require('path'),
  * @param {String} scenePath
  * @return {Object}
  */
-module.exports.read = function(scenePath) {
+module.exports.read = function (scenePath) {
   let file = new File(scenePath);
   file.load();
 
@@ -28,7 +27,7 @@ module.exports.read = function(scenePath) {
  * @param {String} scenePath
  * @return {Object}
  */
-module.exports.readAsync = async function(scenePath) {
+module.exports.readAsync = async function (scenePath) {
   let file = new File(scenePath);
   await file.loadAsync();
 
@@ -79,9 +78,20 @@ function parseScene(file) {
       scene.nodes.sort((a, b) => a.id - b.id);
 
       scene.entities = readEntities(file, scene);
-    } else  if (scene.header.version == 30) {
+    } else if (
+      scene.header.version == 30 ||
+      scene.header.version == 31 ||
+      scene.header.version == 32 ||
+      scene.header.version == 33 ||
+      scene.header.version == 34 ||
+      scene.header.version == 35 ||
+      scene.header.version == 40 ||
+      scene.header.version == 41 ||
+      scene.header.version == 42 ||
+      scene.header.version == 43
+    ) {
       const data = file.readKeyedArchive().get();
-      scene.nodes = data['#dataNodes'].map(archive => {
+      scene.nodes = data['#dataNodes'].map((archive) => {
         let Node = Objects.get(archive['##name']);
         return new Node(archive);
       });
@@ -92,7 +102,7 @@ function parseScene(file) {
       scene.nodes = scene.nodes.concat(polygonScene.nodes);
       scene.nodes.sort((a, b) => a.id - b.id);
     } else {
-      throw new Error('Unsupported scene version:', scene.header.version);
+      throw new Error('Unsupported scene version: ' + scene.header.version);
     }
 
     debug('Bytes read:', file.offset, 'Total bytes:', file.buf.length);
@@ -109,14 +119,15 @@ function parseScene(file) {
  */
 function readHeader(file) {
   let signature = file.readString(4);
-  if (signature != 'SFV2' && signature != 'SCPG') { // signature
+  if (signature != 'SFV2' && signature != 'SCPG') {
+    // signature
     throw new Error('Invalid header file in ' + file.path);
   }
 
   return {
     signature: signature,
     version: file.readInt32(),
-    nodeCount: file.readInt32()
+    nodeCount: file.readInt32(),
   };
 }
 
@@ -150,7 +161,7 @@ function readDescriptor(file) {
   return {
     size: size,
     fileType: fileType,
-    fileTypeName: ['SceneFile', 'ModelFile'][fileType]
+    fileTypeName: ['SceneFile', 'ModelFile'][fileType],
   };
 }
 
@@ -257,7 +268,7 @@ function readEntity(file, scene, parent) {
  * @return {Array}
  */
 function parseEntitiesHierarchy(hierarchy) {
-  return hierarchy.map(archive => {
+  return hierarchy.map((archive) => {
     let name = archive['##name'];
     if (name != 'Entity') throw new Error('Unsupported hierarchy:', name);
 

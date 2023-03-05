@@ -1,5 +1,6 @@
+/* eslint-disable no-bitwise */
 var util = require('util'),
-    DataNode = require('./data-node');
+  DataNode = require('./data-node');
 
 function PolygonGroup(archive) {
   DataNode.call(this, archive);
@@ -31,27 +32,24 @@ PolygonGroup.EVF = {
 };
 PolygonGroup.EVF.LOWER_BIT = PolygonGroup.EVF.VERTEX;
 PolygonGroup.EVF.HIGHER_BIT = PolygonGroup.EVF.JOINTWEIGHT;
-PolygonGroup.EVF.NEXT_AFTER_HIGHER_BIT = (PolygonGroup.EVF.HIGHER_BIT << 1);
+PolygonGroup.EVF.NEXT_AFTER_HIGHER_BIT = PolygonGroup.EVF.HIGHER_BIT << 1;
 
 PolygonGroup.PRIMITIVE_TYPES = {
   1: 'PRIMITIVE_TRIANGLELIST',
   2: 'PRIMITIVE_TRIANGLESTRIP',
-  10: 'PRIMITIVE_LINELIST'
+  10: 'PRIMITIVE_LINELIST',
 };
 
-PolygonGroup.PACKING_TYPES = [
-  'PACKING_NONE',
-  'PACKING_DEFAULT'
-];
+PolygonGroup.PACKING_TYPES = ['PACKING_NONE', 'PACKING_DEFAULT'];
 
 PolygonGroup.eIndexFormat = {
   EIF_16: 0x0,
-  EIF_32: 0x1
+  EIF_32: 0x1,
 };
 
 PolygonGroup.INDEX_FORMAT_SIZE = [2, 4];
 
-PolygonGroup.prototype.load = function(archive) {
+PolygonGroup.prototype.load = function (archive) {
   this.vertexFormat = archive.vertexFormat;
   this.vertexStride = this.getVertexSize(this.vertexFormat);
   this.vertexCount = archive.vertexCount;
@@ -73,7 +71,10 @@ PolygonGroup.prototype.load = function(archive) {
   this.indexFormat = archive.indexFormat;
   if (this.indexFormat == PolygonGroup.eIndexFormat.EIF_16) {
     let size = archive.indices.getValue().getLength();
-    if (size != this.indexCount * PolygonGroup.INDEX_FORMAT_SIZE[this.indexFormat]) {
+    if (
+      size !=
+      this.indexCount * PolygonGroup.INDEX_FORMAT_SIZE[this.indexFormat]
+    ) {
       throw new Error('Counted index size incorrect');
     }
     let archiveData = archive.indices.getValue();
@@ -88,7 +89,7 @@ PolygonGroup.prototype.load = function(archive) {
 /**
  * @private
  */
-PolygonGroup.prototype.parseMeshData = function() {
+PolygonGroup.prototype.parseMeshData = function () {
   this.vertexArray = [];
 
   while (!this.meshData.isEof()) {
@@ -97,14 +98,14 @@ PolygonGroup.prototype.parseMeshData = function() {
       vertex.position = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.NORMAL) {
       vertex.normal = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.COLOR) {
@@ -112,84 +113,84 @@ PolygonGroup.prototype.parseMeshData = function() {
         this.meshData.readUInt8(),
         this.meshData.readUInt8(),
         this.meshData.readUInt8(),
-        this.meshData.readUInt8()
+        this.meshData.readUInt8(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.TEXCOORD0) {
       vertex.textureCoord = vertex.textureCoord || [];
       vertex.textureCoord[0] = [
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
+      // vertex.armorType = vertex.textureCoord[0][0] ? 'NORMAL' : 'SPACED';
+      // delete vertex.textureCoord;
     }
     if (this.vertexFormat & PolygonGroup.EVF.TEXCOORD1) {
       vertex.textureCoord = vertex.textureCoord || [];
       vertex.textureCoord[1] = [
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.TEXCOORD2) {
       vertex.textureCoord = vertex.textureCoord || [];
       vertex.textureCoord[2] = [
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.TEXCOORD3) {
       vertex.textureCoord = vertex.textureCoord || [];
       vertex.textureCoord[3] = [
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.TANGENT) {
       vertex.tangent = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.BINORMAL) {
       vertex.binormal = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.HARD_JOINTINDEX) {
       vertex.hardJointIndex = this.meshData.readFloat();
+      // console.log(vertex.hardJointIndex);
     }
     if (this.vertexFormat & PolygonGroup.EVF.PIVOT4) {
       vertex.pivot4 = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.PIVOT_DEPRECATED) {
       vertex.pivotDeprecated = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.FLEXIBILITY) {
       vertex.flex = this.meshData.readFloat();
     }
     if (this.vertexFormat & PolygonGroup.EVF.ANGLE_SIN_COS) {
-      vertex.angle = [
-        this.meshData.readFloat(),
-        this.meshData.readFloat()
-      ];
+      vertex.angle = [this.meshData.readFloat(), this.meshData.readFloat()];
     }
     if (this.vertexFormat & PolygonGroup.EVF.JOINTINDEX) {
       vertex.jointIdx = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.JOINTWEIGHT) {
@@ -197,7 +198,7 @@ PolygonGroup.prototype.parseMeshData = function() {
         this.meshData.readFloat(),
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.CUBETEXCOORD0) {
@@ -205,34 +206,33 @@ PolygonGroup.prototype.parseMeshData = function() {
       vertex.cubeTextureCoord[0] = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.CUBETEXCOORD1) {
       vertex.cubeTextureCoord[1] = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.CUBETEXCOORD2) {
       vertex.cubeTextureCoord[2] = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
     if (this.vertexFormat & PolygonGroup.EVF.CUBETEXCOORD3) {
       vertex.cubeTextureCoord[3] = [
         this.meshData.readFloat(),
         this.meshData.readFloat(),
-        this.meshData.readFloat()
+        this.meshData.readFloat(),
       ];
     }
 
     this.vertexArray.push(vertex);
   }
-
 
   delete this.meshData;
 };
@@ -240,7 +240,7 @@ PolygonGroup.prototype.parseMeshData = function() {
 /**
  * @private
  */
-PolygonGroup.prototype.getVertexSize = function(flags) {
+PolygonGroup.prototype.getVertexSize = function (flags) {
   let size = 0;
   if (flags & PolygonGroup.EVF.VERTEX) size += 3 * 4;
   if (flags & PolygonGroup.EVF.NORMAL) size += 3 * 4;
