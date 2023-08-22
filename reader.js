@@ -88,7 +88,8 @@ function parseScene(file) {
       scene.header.version == 40 ||
       scene.header.version == 41 ||
       scene.header.version == 42 ||
-      scene.header.version == 43
+      scene.header.version == 43 || 
+      scene.header.version == 47
     ) {
       const data = file.readKeyedArchive().get();
       scene.nodes = data['#dataNodes'].map((archive) => {
