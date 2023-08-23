@@ -211,7 +211,7 @@ VariantType.prototype.read = function (file) {
       }
       break;
     }
-    case 'TYPE_TEST': {
+    case 'TYPE_XXX': {
       this.value = []
       for (let i = 0; i < 10; i++) {
         this.value.push(file.readInt32());
