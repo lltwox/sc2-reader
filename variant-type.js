@@ -1,5 +1,5 @@
 const KeyedArchive = require('./keyed-archive'),
-      debug = require('debug')('sc2:vt2');
+  debug = require('debug')('sc2:vt2');
 
 function VariantType(file, version) {
   this.value = null;
@@ -37,6 +37,8 @@ VariantType.TYPES = [
   'TYPE_UINT16',         // 0x19
   'TYPE_??????',         // 0x1a
   'TYPE_ARRAY',          // 0x1b
+  'TYPE_??????',         // 0x1c
+  'TYPE_XXX'             // 0x1d
 ];
 
 VariantType.SIMPLE_TYPES = [
@@ -62,10 +64,11 @@ VariantType.SIMPLE_TYPES = [
   'TYPE_UINT8',
   'TYPE_INT16',
   'TYPE_UINT16',
-  'TYPE_ARRAY'
+  'TYPE_ARRAY',
+
 ];
 
-VariantType.prototype.read = function(file) {
+VariantType.prototype.read = function (file) {
   const type = file.readInt8();
   const typeName = VariantType.TYPES[type];
   if (!typeName) throw new Error('Unknown variant type: ' + type);
@@ -75,128 +78,166 @@ VariantType.prototype.read = function(file) {
     + `0x${type.toString(16).padStart(2, '0')} ${typeName} at`
   );
 
-  if (typeName == 'TYPE_BOOLEAN') {
-    this.value = Boolean(file.readInt8());
-  } else if (typeName == 'TYPE_INT8') {
-    this.value = file.readInt8();
-  } else if (typeName == 'TYPE_UINT8') {
-    this.value = file.readUInt8();
-  } else if (typeName == 'TYPE_INT16') {
-    this.value = file.readInt16();
-  } else if (typeName == 'TYPE_UINT16') {
-    this.value = file.readUInt16();
-  } else if (typeName == 'TYPE_INT32') {
-    this.value = file.readInt32();
-  } else if (typeName == 'TYPE_UINT32') {
-    this.value = file.readUInt32();
-  } else if (typeName == 'TYPE_FLOAT') {
-    this.value = file.readFloat();
-  } else if (typeName == 'TYPE_FLOAT64') {
-    this.value = file.readDouble();
-  } else if (typeName == 'TYPE_STRING') {
-    if (this.version == 2) {
-      this.value = KeyedArchive.getString(file.readUInt32());
-    } else {
+  switch (typeName) {
+    case 'TYPE_BOOLEAN':
+      this.value = Boolean(file.readInt8());
+      break;
+    case 'TYPE_INT8':
+      this.value = file.readInt8();
+      break;
+    case 'TYPE_UINT8':
+      this.value = file.readUInt8();
+      break;
+    case 'TYPE_INT16':
+      this.value = file.readInt16();
+      break;
+    case 'TYPE_UINT16':
+      this.value = file.readUInt16();
+      break;
+    case 'TYPE_INT32':
+      this.value = file.readInt32();
+      break;
+    case 'TYPE_UINT32':
+      this.value = file.readUInt32();
+      break;
+    case 'TYPE_FLOAT':
+      this.value = file.readFloat();
+      break;
+    case 'TYPE_FLOAT64':
+      this.value = file.readDouble();
+      break;
+    case 'TYPE_STRING':
+      if (this.version == 2) {
+        this.value = KeyedArchive.getString(file.readUInt32());
+      } else {
+        let length = file.readInt32();
+        this.value = file.readString(length);
+      }
+      break;
+    case 'TYPE_WIDE_STRING': {
       let length = file.readInt32();
-      this.value = file.readString(length);
+      this.value = file.readUTFString(length);
+      break;
     }
-  } else if (typeName == 'TYPE_WIDE_STRING') {
-    let length = file.readInt32();
-    this.value = file.readUTFString(length);
-  } else if (typeName == 'TYPE_BYTE_ARRAY') {
-    let length = file.readInt32();
-    this.value = file.readByteArray(length);
-  } else if (typeName == 'TYPE_KEYED_ARCHIVE') {
-    if (this.version == 2) {
-      const prefix = file.readByteArray(4);
-      const archive = file.readKeyedArchive();
-      archive.prefix = prefix;
-      this.value = archive.get();
-    } else {
+    case 'TYPE_BYTE_ARRAY': {
       let length = file.readInt32();
-      this.value = file.readKeyedArchive(file.readByteArray(length)).get();
+      this.value = file.readByteArray(length);
+      break;
     }
-  } else if (typeName == 'TYPE_INT64') {
-    this.value = file.readInt64();
-  } else if (typeName == 'TYPE_UINT64') {
-    this.value = file.readUInt64();
-  } else if (typeName == 'TYPE_VECTOR2') {
-    this.value = [file.readFloat(), file.readFloat()];
-  } else if (typeName == 'TYPE_VECTOR3') {
-    this.value = [file.readFloat(), file.readFloat(), file.readFloat()];
-  } else if (typeName == 'TYPE_VECTOR4') {
-    this.value = [
-      file.readFloat(),
-      file.readFloat(),
-      file.readFloat(),
-      file.readFloat()
-    ];
-  } else if (typeName == 'TYPE_MATRIX2') {
-    this.value = [
-      [file.readFloat(), file.readFloat()],
-      [file.readFloat(), file.readFloat()]
-    ];
-  } else if (typeName == 'TYPE_MATRIX3') {
-    this.value = [
-      [file.readFloat(), file.readFloat(), file.readFloat()],
-      [file.readFloat(), file.readFloat(), file.readFloat()],
-      [file.readFloat(), file.readFloat(), file.readFloat()]
-    ];
-  } else if (typeName == 'TYPE_MATRIX4') {
-    this.value = [
-      [file.readFloat(), file.readFloat(), file.readFloat(), file.readFloat()],
-      [file.readFloat(), file.readFloat(), file.readFloat(), file.readFloat()],
-      [file.readFloat(), file.readFloat(), file.readFloat(), file.readFloat()],
-      [file.readFloat(), file.readFloat(), file.readFloat(), file.readFloat()]
-    ];
-  } else if (typeName == 'TYPE_COLOR') {
-    this.value = [
-      file.readFloat(), // r
-      file.readFloat(), // g
-      file.readFloat(), // b
-      file.readFloat()  // a
-    ];
-  } else if (typeName == 'TYPE_FASTNAME') {
-    if (this.version == 2) {
-      this.value = KeyedArchive.getString(file.readUInt32());
-    } else {
+    case 'TYPE_KEYED_ARCHIVE':
+      if (this.version == 2) {
+        const prefix = file.readByteArray(4);
+        const archive = file.readKeyedArchive();
+        archive.prefix = prefix;
+        this.value = archive.get();
+      } else {
+        let length = file.readInt32();
+        this.value = file.readKeyedArchive(file.readByteArray(length)).get();
+      }
+      break;
+    case 'TYPE_INT64':
+      this.value = file.readInt64();
+      break;
+    case 'TYPE_UINT64':
+      this.value = file.readUInt64();
+      break;
+    case 'TYPE_VECTOR2':
+      this.value = [file.readFloat(), file.readFloat()];
+      break;
+    case 'TYPE_VECTOR3':
+      this.value = [file.readFloat(), file.readFloat(), file.readFloat()];
+      break;
+    case 'TYPE_VECTOR4':
+      this.value = [
+        file.readFloat(),
+        file.readFloat(),
+        file.readFloat(),
+        file.readFloat()
+      ];
+      break;
+    case 'TYPE_MATRIX2':
+      this.value = [
+        [file.readFloat(), file.readFloat()],
+        [file.readFloat(), file.readFloat()]
+      ];
+      break;
+    case 'TYPE_MATRIX3':
+      this.value = [
+        [file.readFloat(), file.readFloat(), file.readFloat()],
+        [file.readFloat(), file.readFloat(), file.readFloat()],
+        [file.readFloat(), file.readFloat(), file.readFloat()]
+      ];
+      break;
+    case 'TYPE_MATRIX4':
+      this.value = [
+        [file.readFloat(), file.readFloat(), file.readFloat(), file.readFloat()],
+        [file.readFloat(), file.readFloat(), file.readFloat(), file.readFloat()],
+        [file.readFloat(), file.readFloat(), file.readFloat(), file.readFloat()],
+        [file.readFloat(), file.readFloat(), file.readFloat(), file.readFloat()]
+      ];
+      break;
+    case 'TYPE_COLOR':
+      this.value = [
+        file.readFloat(), // r
+        file.readFloat(), // g
+        file.readFloat(), // b
+        file.readFloat()  // a
+      ];
+      break;
+    case 'TYPE_FASTNAME':
+      if (this.version == 2) {
+        this.value = KeyedArchive.getString(file.readUInt32());
+      } else {
+        const length = file.readInt32();
+        this.value = file.readString(length);
+      }
+      break;
+    case 'TYPE_AABBOX3':
+      this.value = [
+        [file.readFloat(), file.readFloat(), file.readFloat()],
+        [file.readFloat(), file.readFloat(), file.readFloat()]
+      ];
+      break;
+    case 'TYPE_FILEPATH': {
       const length = file.readInt32();
       this.value = file.readString(length);
+      break;
     }
-  } else if (typeName == 'TYPE_AABBOX3') {
-    this.value = [
-      [file.readFloat(), file.readFloat(), file.readFloat()],
-      [file.readFloat(), file.readFloat(), file.readFloat()]
-    ];
-  } else if (typeName == 'TYPE_FILEPATH') {
-    const length = file.readInt32();
-    this.value = file.readString(length);
-  } else if (typeName == 'TYPE_ARRAY') {
-    const length = file.readInt32();
-    this.value = [];
-    for (let i = 0; i < length; i++) {
-      this.value.push(file.readVariantType(this.version).getOnlySimpleValue());
+    case 'TYPE_ARRAY': {
+      const length = file.readInt32();
+      this.value = [];
+      for (let i = 0; i < length; i++) {
+        this.value.push(file.readVariantType(this.version).getOnlySimpleValue());
+      }
+      break;
     }
-  } else {
-    throw new Error('Unsuppored type:' + typeName);
+    case 'TYPE_XXX': {
+      this.value = []
+      for (let i = 0; i < 10; i++) {
+        this.value.push(file.readInt32());
+      }
+      break;
+    }
+    default:
+      throw new Error('Unsuppored type:' + typeName);
   }
 
   this.type = typeName;
 };
 
-VariantType.prototype.get = function() {
+VariantType.prototype.get = function () {
   return [this.type, this.value];
 };
 
-VariantType.prototype.getType = function() {
+VariantType.prototype.getType = function () {
   return this.type;
 };
 
-VariantType.prototype.getValue = function() {
+VariantType.prototype.getValue = function () {
   return this.value;
 };
 
-VariantType.prototype.toString = function() {
+VariantType.prototype.toString = function () {
   if (this.type == 'TYPE_KEYED_ARCHIVE') {
     return this.value;
   }
@@ -212,7 +253,7 @@ VariantType.prototype.toString = function() {
   return this;
 };
 
-VariantType.prototype.getOnlySimpleValue = function() {
+VariantType.prototype.getOnlySimpleValue = function () {
   if (VariantType.SIMPLE_TYPES.indexOf(this.type) >= 0) {
     return this.value;
   } else {
